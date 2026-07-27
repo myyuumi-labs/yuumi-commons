@@ -1,0 +1,20 @@
+# Example profile for services using yuumi-commons observability.
+# Merge into application.yml or activate with spring.profiles.include=observability
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
+logging:
+  config: classpath:yuumi-logback-json.xml
+
+yuumi:
+  observability:
+    filter:
+      enabled: true
+    feign:
+      enabled: true

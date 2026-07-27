@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <includeMdcKeyName>cid</includeMdcKeyName>
+      <includeMdcKeyName>traceId</includeMdcKeyName>
+      <includeMdcKeyName>spanId</includeMdcKeyName>
+      <includeMdcKeyName>method</includeMdcKeyName>
+      <includeMdcKeyName>path</includeMdcKeyName>
+      <includeMdcKeyName>status</includeMdcKeyName>
+      <includeMdcKeyName>durMs</includeMdcKeyName>
+    </encoder>
+  </appender>
+
+  <logger name="com.yuumi.ecommerce.commons.observability.web.CorrelationAndAccessLogFilter" level="INFO"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

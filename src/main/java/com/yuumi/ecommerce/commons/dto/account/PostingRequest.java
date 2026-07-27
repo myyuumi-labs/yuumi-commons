@@ -1,0 +1,13 @@
+package com.yuumi.ecommerce.commons.dto.account;
+
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record PostingRequest(
+        @NotNull @Positive BigDecimal amount,
+        String reason
+) {}
