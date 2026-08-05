@@ -7,7 +7,7 @@ management:
       probability: 1.0
   otlp:
     tracing:
-      endpoint: http://localhost:4318/v1/traces
+      endpoint: ${YUUMI_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
 
 logging:
   config: classpath:yuumi-logback-json.xml

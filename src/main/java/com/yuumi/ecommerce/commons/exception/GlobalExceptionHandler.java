@@ -1,6 +1,7 @@
 package com.yuumi.ecommerce.commons.exception;
 
 import com.yuumi.ecommerce.commons.dto.ErrorResponse;
+import com.yuumi.ecommerce.commons.dto.ErrorResponses;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -30,10 +31,22 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponses.of(ErrorCodes.FORBIDDEN, "Forbidden", ex.getMessage()));
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(err("CONFLICT", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.CONFLICT, ex.getMessage()));
     }
 
     
@@ -44,21 +57,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.debug("AuthenticationException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(err("INVALID_JWT", "The provided JWT token is invalid or expired", ex.getMessage()));
+                .body(ErrorResponses.of("INVALID_JWT", "The provided JWT token is invalid or expired", ex.getMessage()));
     }
  
     @ExceptionHandler(JwtAuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(JwtAuthenticationException ex) {
         log.debug("JwtAuthenticationException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(err("INVALID_CREDS", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of("INVALID_CREDS", ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         log.debug("AccessDeniedException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(err("FORBIDDEN", "Forbidden", ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.FORBIDDEN, "Forbidden", ex.getMessage()));
     }
 
 
@@ -67,25 +80,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotFound(AccountNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(err("ACCOUNT_NOT_FOUND", "The account ID does not exist", ex.getMessage()));
+                .body(ErrorResponses.of("ACCOUNT_NOT_FOUND", "The account ID does not exist", ex.getMessage()));
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(err("CUSTOMER_NOT_FOUND", "The customer ID does not exist", ex.getMessage()));
+                .body(ErrorResponses.of("CUSTOMER_NOT_FOUND", "The customer ID does not exist", ex.getMessage()));
     }
 
     @ExceptionHandler(ConsentNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleConsentNotFound(ConsentNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(err("CONSENT_MISSING", "Consent Missing", ex.getMessage()));
+                .body(ErrorResponses.of("CONSENT_MISSING", "Consent Missing", ex.getMessage()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(err("NOT_FOUND", "Resource not found", ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.NOT_FOUND, "Resource not found", ex.getMessage()));
     }
 
     // ---------- Business / State ----------
@@ -93,19 +106,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFunds(InsufficientFundsException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(err("INSUFFICIENT_FUNDS", "Insufficient funds", ex.getMessage()));
+                .body(ErrorResponses.of("INSUFFICIENT_FUNDS", "Insufficient funds", ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTransition(InvalidTransitionException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("INVALID_TRANSITION", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of("INVALID_TRANSITION", ex.getMessage(), ex.getMessage()));
     }
 
     @ExceptionHandler(VersionMismatchException.class)
     public ResponseEntity<ErrorResponse> handleVersionMismatch(VersionMismatchException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(err("VERSION_MISMATCH", "Stale version or ETag", ex.getMessage()));
+                .body(ErrorResponses.of("VERSION_MISMATCH", "Stale version or ETag", ex.getMessage()));
     }
 
     
@@ -113,7 +126,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UpstreamException.class)
     public ResponseEntity<ErrorResponse> handleUpstream(UpstreamException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(err("UPSTREAM_ERROR", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.UPSTREAM_ERROR, ex.getMessage()));
     }
 
     // ---------- Validation ----------
@@ -121,7 +134,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("VALIDATION_ERROR", "Constraint violation", ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, "Constraint violation", ex.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -130,7 +143,7 @@ public class GlobalExceptionHandler {
                 ? ex.getMessage()
                 : ex.getMostSpecificCause().getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("VALIDATION_ERROR", "Malformed JSON request", detail));
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, "Malformed JSON request", detail));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -157,19 +170,19 @@ public class GlobalExceptionHandler {
                 : all.toString();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("VALIDATION_ERROR", firstMessage, details));
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, firstMessage, details));
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidation(ValidationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("VALIDATION_ERROR", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(err("VALIDATION_ERROR", ex.getMessage(), ex.getMessage()));
+                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
     }
 
     // ---------- Fallback ----------
@@ -178,18 +191,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("Unhandled exception", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(err("INTERNAL_ERROR", "Something went wrong", ex.getMessage()));
-    }
-
-    // ---------- helper ----------
-    private ErrorResponse err(String code, String message, String details) {
-        return ErrorResponse.builder()
-                .error(ErrorResponse.ErrorDetail.builder()
-                        .code(code)
-                        .message(message)
-                        .details(details)
-                        .build())
-                .build();
+                .body(ErrorResponses.of(ErrorCodes.INTERNAL_ERROR, "Something went wrong", ex.getMessage()));
     }
 
 }
