@@ -1,14 +1,12 @@
 package com.yuumi.ecommerce.commons.exception;
 
-import com.yuumi.ecommerce.commons.dto.ErrorResponse;
-import com.yuumi.ecommerce.commons.dto.ErrorResponses;
+import com.yuumi.ecommerce.commons.dto.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,178 +18,143 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
-/**
- * Centralized error mapping to your commons-dto envelope.
- * Status codes align with your OpenAPI conventions.
- */
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
+    return ApiResponse.asBadRequest(ex.getMessage());
+  }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
-    }
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+    return ApiResponse.asForbidden("Forbidden", ex.getMessage());
+  }
 
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponses.of(ErrorCodes.FORBIDDEN, "Forbidden", ex.getMessage()));
-    }
+  @ExceptionHandler(ConflictException.class)
+  public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex) {
+    return ApiResponse.asConflict(ex.getMessage());
+  }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorResponses.of(ErrorCodes.CONFLICT, ex.getMessage()));
-    }
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
+    log.debug("AuthenticationException: {}", ex.getMessage());
+    return ApiResponse.asUnauthorized(
+        "The provided JWT token is invalid or expired",
+        ex.getMessage()
+    );
+  }
 
-    
-    
-    
-    
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
-        log.debug("AuthenticationException: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponses.of("INVALID_JWT", "The provided JWT token is invalid or expired", ex.getMessage()));
-    }
- 
-    @ExceptionHandler(JwtAuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(JwtAuthenticationException ex) {
-        log.debug("JwtAuthenticationException: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponses.of("INVALID_CREDS", ex.getMessage()));
-    }
+  @ExceptionHandler(JwtAuthenticationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleJwtAuthenticationException(
+      JwtAuthenticationException ex
+  ) {
+    log.debug("JwtAuthenticationException: {}", ex.getMessage());
+    return ApiResponse.asUnauthorized(ex.getMessage());
+  }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        log.debug("AccessDeniedException: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponses.of(ErrorCodes.FORBIDDEN, "Forbidden", ex.getMessage()));
-    }
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+    log.debug("AccessDeniedException: {}", ex.getMessage());
+    return ApiResponse.asForbidden("Forbidden", ex.getMessage());
+  }
 
+  @ExceptionHandler(AccountNotFoundException.class)
+  public ResponseEntity<ApiResponse<Void>> handleAccountNotFound(AccountNotFoundException ex) {
+    return ApiResponse.asNotFound("The account ID does not exist", ex.getMessage());
+  }
 
-    // ---------- Domain Not Found ----------
+  @ExceptionHandler(CustomerNotFoundException.class)
+  public ResponseEntity<ApiResponse<Void>> handleCustomerNotFound(CustomerNotFoundException ex) {
+    return ApiResponse.asNotFound("The customer ID does not exist", ex.getMessage());
+  }
 
-    @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleAccountNotFound(AccountNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponses.of("ACCOUNT_NOT_FOUND", "The account ID does not exist", ex.getMessage()));
-    }
+  @ExceptionHandler(ConsentNotFoundException.class)
+  public ResponseEntity<ApiResponse<Void>> handleConsentNotFound(ConsentNotFoundException ex) {
+    return ApiResponse.asNotFound("Consent Missing", ex.getMessage());
+  }
 
-    @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponses.of("CUSTOMER_NOT_FOUND", "The customer ID does not exist", ex.getMessage()));
-    }
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+    return ApiResponse.asNotFound("Resource not found", ex.getMessage());
+  }
 
-    @ExceptionHandler(ConsentNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleConsentNotFound(ConsentNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponses.of("CONSENT_MISSING", "Consent Missing", ex.getMessage()));
-    }
+  @ExceptionHandler(InsufficientFundsException.class)
+  public ResponseEntity<ApiResponse<Void>> handleInsufficientFunds(InsufficientFundsException ex) {
+    return ApiResponse.asUnprocessableEntity("Insufficient funds", ex.getMessage());
+  }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponses.of(ErrorCodes.NOT_FOUND, "Resource not found", ex.getMessage()));
-    }
+  @ExceptionHandler(InvalidTransitionException.class)
+  public ResponseEntity<ApiResponse<Void>> handleInvalidTransition(InvalidTransitionException ex) {
+    return ApiResponse.asBadRequest(ex.getMessage(), ex.getMessage());
+  }
 
-    // ---------- Business / State ----------
+  @ExceptionHandler(VersionMismatchException.class)
+  public ResponseEntity<ApiResponse<Void>> handleVersionMismatch(VersionMismatchException ex) {
+    return ApiResponse.asConflict("Stale version or ETag", ex.getMessage());
+  }
 
-    @ExceptionHandler(InsufficientFundsException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientFunds(InsufficientFundsException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(ErrorResponses.of("INSUFFICIENT_FUNDS", "Insufficient funds", ex.getMessage()));
-    }
+  @ExceptionHandler(UpstreamException.class)
+  public ResponseEntity<ApiResponse<Void>> handleUpstream(UpstreamException ex) {
+    return ApiResponse.asBadGateway(ex.getMessage());
+  }
 
-    @ExceptionHandler(InvalidTransitionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTransition(InvalidTransitionException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of("INVALID_TRANSITION", ex.getMessage(), ex.getMessage()));
-    }
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+    return ApiResponse.asBadRequest("Constraint violation", ex.getMessage());
+  }
 
-    @ExceptionHandler(VersionMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleVersionMismatch(VersionMismatchException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorResponses.of("VERSION_MISMATCH", "Stale version or ETag", ex.getMessage()));
-    }
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<ApiResponse<Void>> handleNotReadable(HttpMessageNotReadableException ex) {
+    String detail = ex.getMostSpecificCause() == null
+        ? ex.getMessage()
+        : ex.getMostSpecificCause().getMessage();
+    return ApiResponse.asBadRequest("Malformed JSON request", detail);
+  }
 
-    
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ApiResponse<Void>> handleFieldValidation(MethodArgumentNotValidException ex) {
+    String firstMessage = "Input validation failed";
+    String firstField = null;
+    StringBuilder all = new StringBuilder();
 
-    @ExceptionHandler(UpstreamException.class)
-    public ResponseEntity<ErrorResponse> handleUpstream(UpstreamException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(ErrorResponses.of(ErrorCodes.UPSTREAM_ERROR, ex.getMessage()));
-    }
-
-    // ---------- Validation ----------
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, "Constraint violation", ex.getMessage()));
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex) {
-        String detail = (ex.getMostSpecificCause() == null)
-                ? ex.getMessage()
-                : ex.getMostSpecificCause().getMessage();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, "Malformed JSON request", detail));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleFieldValidation(MethodArgumentNotValidException ex) {
-        // Build a single envelope with first message + all field messages in details
-        String firstMessage = "Input validation failed";
-        String firstField = null;
-        StringBuilder all = new StringBuilder();
-
-        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
-        for (FieldError fe : fieldErrors) {
-            if (firstField == null) {
-                firstField = fe.getField();
-                if (fe.getDefaultMessage() != null) {
-                    firstMessage = fe.getDefaultMessage();
-                }
-            }
-            if (all.length() > 0) all.append("; ");
-            all.append(fe.getField()).append(": ").append(fe.getDefaultMessage());
+    List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
+    for (FieldError fieldError : fieldErrors) {
+      if (firstField == null) {
+        firstField = fieldError.getField();
+        if (fieldError.getDefaultMessage() != null) {
+          firstMessage = fieldError.getDefaultMessage();
         }
-
-        String details = (firstField != null)
-                ? "field=" + firstField + " | " + all.toString()
-                : all.toString();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, firstMessage, details));
+      }
+      if (!all.isEmpty()) {
+        all.append("; ");
+      }
+      all.append(fieldError.getField()).append(": ").append(fieldError.getDefaultMessage());
     }
 
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(ValidationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
-    }
+    String details = firstField != null
+        ? "field=" + firstField + " | " + all
+        : all.toString();
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponses.of(ErrorCodes.VALIDATION_ERROR, ex.getMessage()));
-    }
+    return ApiResponse.asBadRequest(firstMessage, details);
+  }
 
-    // ---------- Fallback ----------
+  @ExceptionHandler(ValidationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleValidation(ValidationException ex) {
+    return ApiResponse.asBadRequest(ex.getMessage());
+  }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        log.error("Unhandled exception", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponses.of(ErrorCodes.INTERNAL_ERROR, "Something went wrong", ex.getMessage()));
-    }
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+    return ApiResponse.asBadRequest(ex.getMessage());
+  }
 
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+    log.error("Unhandled exception", ex);
+    return ApiResponse.asInternalError("Something went wrong", ex.getMessage());
+  }
 }

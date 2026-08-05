@@ -1,11 +1,15 @@
 package com.yuumi.ecommerce.commons.dto;
 
-public record PageQuery(int page, int size) {
+public record Pageable(int page, int size, boolean pagingIgnored) {
 
   private static final int DEFAULT_SIZE = 20;
   private static final int MAX_SIZE = 100;
 
-  public PageQuery {
+  public Pageable(int page, int size) {
+    this(page, size, false);
+  }
+
+  public Pageable {
     if (page < 0) {
       page = 0;
     }
@@ -18,6 +22,6 @@ public record PageQuery(int page, int size) {
   }
 
   public int offset() {
-    return page * size;
+    return pagingIgnored ? 0 : page * size;
   }
 }

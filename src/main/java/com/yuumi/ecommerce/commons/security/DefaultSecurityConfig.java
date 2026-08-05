@@ -1,6 +1,5 @@
 package com.yuumi.ecommerce.commons.security;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,19 +37,15 @@ public class DefaultSecurityConfig {
                 // Disable CSRF since we're using stateless JWTs and not browser sessions
                 .csrf(cs -> cs.disable())
 
-                // Ensure the service is stateless ó no JSESSIONID cookies or server-side sessions
+                // Ensure the service is stateless ù no JSESSIONID cookies or server-side sessions
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Authorization rules for HTTP requests
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints ó no JWT required
+                        // Public endpoints ù no JWT required
                         .requestMatchers(
-                                "/actuator/health",       // Health check for monitoring
-                                "/api/v1/health",         // API-specific health endpoint
-                                "/api/v1/customer/register", // Public endpoint to register new customers
-                                "/.well-known/jwks.json", // JWKS public key endpoint (used by Auth0)
-                                "/api/v1/test/public",
-                                "/api/v1/customers"
+                                "/actuator/health",
+                                "/.well-known/jwks.json"
                         ).permitAll()
 
                         // Everything else requires a valid JWT access token
